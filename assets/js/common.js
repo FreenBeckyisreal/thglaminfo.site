@@ -1,7 +1,7 @@
 /*
- * Author: ArtStyles (ArtTemplate)
+ * Author: Nguyen Xuan Phu
  * Template Name: vCard
- * Version: 1.0.0
+ * Version: 1.0.2
 */
 
 $(document).ready(function() {
@@ -22,59 +22,108 @@ $(document).ready(function() {
         isMobile = false;
     }
 	
-	//IE, Edge
-	var isIE = /MSIE 9/i.test(navigator.userAgent) || /rv:11.0/i.test(navigator.userAgent) || /MSIE 10/i.test(navigator.userAgent) || /Edge\/\d+/.test(navigator.userAgent);
-  
-
+	
     /*-----------------------------------------------------------------
       Loaded
     -------------------------------------------------------------------*/
 
-    anime({
-        targets: 'body',
-        opacity: 1,
-        delay: 400,
-        complete: function(anim) {
-            progressBar(); //Init progress bar
-        }
+	var tweenTime = 4; //sec
+
+	var master = new TimelineMax({delay: tweenTime-2});
+	master.eventCallback('onComplete', function() {
+		progressBar(); //Init progress bar
     });
-    
-    $('body, .js-img-load').imagesLoaded({ background: !0 }).always( function( instance ) {
+
+	$('body, .js-img-load').imagesLoaded({ background: !0 }).always( function( instance ) {
 	    preloader(); //Init preloader
     });
 
-    function preloader() {
-        var tl = anime.timeline({}); 
-        tl
-        .add({
-            targets: '.preloader',
-            duration: 1,
-            opacity: 1
-        })
-        .add({
-            targets: '.circle-pulse',
-            duration: 300,
-            //delay: 500,
-            opacity: 1,
-            zIndex: '-1',
-            easing: 'easeInOutQuart'
-        },'+=500')
-        .add({
-            targets: '.preloader__progress span',
-            duration: 500,
-            width: '100%',
-			easing: 'easeInOutQuart'
-        },'-=500')
-        .add({
-            targets: '.preloader',
-            duration: 500,
-            opacity: 0,
-            zIndex: '-1',
-            easing: 'easeInOutQuart'
-        });
-    };
+	function preloader() {
+		var tl = new TimelineMax({paused: true});
+		tl.set('.preloader', {
+			opacity: '1'
+		})
+		.addLabel('first')
+		.to('.preloader', .6, {
+			delay: 1,
+			opacity: '0',
+			zIndex: '-1',
+			ease: 'Power3.easeInOut'
+		})
+		.to('.circle-pulse', .5, {
+			opacity: 0,
+			ease: 'Power3.easeInOut'
+		},'+=.5')
+		.to('.preloader__progress span', 1, {
+			width: '100%',
+			ease: 'Power3.easeInOut'
+		}, 'first+=.5');
+
+        tl.duration(tweenTime).play();
+        console.log(tl.endTime());
+			
+		return tl;
+	};
 
 
+    /*-----------------------------------------------------------------
+      Hamburger
+    -------------------------------------------------------------------*/
+
+    $('.hamburger').on('click', function() {
+        $(this).toggleClass('is-active');
+	    $('.inner-menu').toggleClass('is-active');
+		$('body').toggleClass('open-menu');
+    });
+	
+	
+    /*-----------------------------------------------------------------
+      Nav
+    -------------------------------------------------------------------*/
+  
+    var $sideNavOpen = $('.hamburger');
+    var tl = new TimelineMax({paused:true, reversed:true});
+
+    if (window.matchMedia("(max-width: 580px)").matches) {
+        $('.js-menu').each(function(i) {
+            tl.timeScale(1);
+            tl.fromTo('.nav', 1.0, {
+			    width: '0',
+				opacity: 0,
+				force3D:true
+            }, {
+			    width: '100%',
+				opacity: 1,
+			    ease: Back.easeOut
+		    })
+            .staggerFrom('.nav__item', 0.2, {
+                opacity: 0,
+                x: 70,
+                ease: Back.easeOut
+            },0.06, '-=0.5');
+        }); 
+    } else {
+        $('.js-menu').each(function(i) {
+            tl.timeScale(1);
+            tl.fromTo('.nav', 1.0, {
+			    width: '0'
+            }, {
+			    width: '100%',
+			    ease: 'Bounce.easeOut'
+		    })
+            .staggerFrom('.nav__item', 0.2, {
+                opacity: 0,
+                x: 70,
+                ease: Back.easeOut
+            },0.06, '-=0.25');
+        });  
+    }
+  
+    $sideNavOpen.on('click', function() {
+        tl.reversed() ? tl.play() : tl.reverse();	
+    });
+
+	
     /*-----------------------------------------------------------------
       Carousel
     -------------------------------------------------------------------*/	
@@ -82,7 +131,7 @@ $(document).ready(function() {
 	// Testimonials
 	$('.js-carousel-review').each(function() {
 		var carousel = new Swiper('.js-carousel-review', {
-            slidesPerView: 1,
+            slidesPerView: 2,
 			spaceBetween: 30,
 			speed: 300,
 			grabCursor: true,
@@ -96,7 +145,11 @@ $(document).ready(function() {
             },
 			breakpoints: {
                 580: {
+					slidesPerView: 1,
                     spaceBetween: 20
+                },
+                991: {
+                    slidesPerView: 1
                 }
             }
 		});
@@ -243,23 +296,6 @@ $(document).ready(function() {
 	
 	
     /*-----------------------------------------------------------------
-      Jarallax
-    -------------------------------------------------------------------*/		
-
-    function parallax() {
-        $('.js-parallax').jarallax({
-			disableParallax: function () {
-			  return isIE
-			},
-            speed: 0.65,
-            type: 'scroll'
-        });
-	};
-	
-	parallax(); //Init*/
-    
-	
-    /*-----------------------------------------------------------------
       ScrollTo
     -------------------------------------------------------------------*/
 	
@@ -286,6 +322,16 @@ $(document).ready(function() {
     }
 	
 	scrollToTop(); //Init
+
+
+    /*-----------------------------------------------------------------
+      Style background image
+    -------------------------------------------------------------------*/	
+  
+    $('.js-image').each(function(){
+        var dataImage = $(this).attr('data-image');
+        $(this).css('background-image', 'url(' + dataImage + ')');
+    });
     
 	
     /*-----------------------------------------------------------------
@@ -297,48 +343,6 @@ $(document).ready(function() {
     });
 
 
-    /*-----------------------------------------------------------------
-	  Tabs
-    -------------------------------------------------------------------*/	
-    
-	$('.js-tabs').each(function(){
-	    $('.content .tabcontent').hide();
-        $('.content .tabcontent:first').show();
-        $('.nav__item a').on('click', function () {
-            $('.nav__item a').removeClass('active');
-            $(this).addClass('active');
-            var currentTab = $(this).attr('href');
-            $('.content .tabcontent').hide();            
-            $(currentTab).show();
-            $portfolioMasonry.isotope ({
-                columnWidth: '.gallery-grid__item',
-                gutter: '.gutter-sizer',
-                isAnimated: true
-            });
-			$('.js-scroll').getNiceScroll().resize()
-            return false;
-        });
-	    
-		// Mobile close menu
-	    var screenMobile = 580;
-	
-	    windowWidth = $(window).width();
-        if ((windowWidth < screenMobile)) {	
-			// autoscroll to content
-            $(".nav__item a").click(function(e) {
-		        e.preventDefault();
-		        var offset = -35;
-		
-                $('html, body').animate({
-                    scrollTop: $("#content").offset().top + offset
-                }, 0);
-            });			
-	    } else {
-		
-	    }
-	});
-	
-	
     /*-----------------------------------------------------------------
       Tooltip
     -------------------------------------------------------------------*/
@@ -380,8 +384,8 @@ $(document).ready(function() {
       Masonry
     -------------------------------------------------------------------*/	
 	
-    // Portfolio grid row
-    var $portfolioMasonry = $('.js-grid-row').isotope({
+    // Portfolio
+    var $portfolioMasonry = $('.js-masonry').isotope({
         itemSelector: '.gallery-grid__item',
 	    layoutMode: 'fitRows',
         percentPosition: true,
@@ -416,34 +420,6 @@ $(document).ready(function() {
 	    });
     });	
 
-	// Portfolio grid irregular
-	var $portfolioIrregularMasonry = $('.js-grid').isotope({
-        itemSelector: '.gallery-grid__item',
-        percentPosition: true,
-	    transitionDuration: '0.5s',
-        hiddenStyle: {
-            opacity: 0,
-            transform: 'scale(0.001)'
-        },
-        visibleStyle: {
-            opacity: 1,
-            transform: 'scale(1)'
-        },
-        masonry: {
-	        columnWidth: '.gallery-grid__item',
-            gutter: '.gutter-sizer',
-            isAnimated: true
-        }
-    });
-  
-    $portfolioIrregularMasonry.imagesLoaded().progress( function() {
-        $portfolioIrregularMasonry.isotope ({
-	        columnWidth: '.gallery-grid__item',
-            gutter: '.gutter-sizer',
-            isAnimated: true
-	    });
-    });
-	
 	
     /*-----------------------------------------------------------------
       niceScroll
@@ -490,206 +466,6 @@ $(document).ready(function() {
     objectFitImages($someImages);
 	
 
-	/*-----------------------------------------------------------------
-	  PhotoSwipe
-	-------------------------------------------------------------------*/
-
-    var initPhotoSwipeFromDOM = function(gallerySelector) {
-        var parseThumbnailElements = function(el) {
-            var thumbElements = el.childNodes,
-                numNodes = thumbElements.length,
-                items = [],
-                figureEl,
-                linkEl,
-                size,
-                item;
-
-            for(var i = 0; i < numNodes; i++) {
-                figureEl = thumbElements[i]; // <figure> element
-					
-                if(figureEl.nodeType !== 1) {
-                    continue;
-                }
-
-                linkEl = figureEl.children[0]; // <a> element
-                size = linkEl.getAttribute('data-size').split('x');
-
-                item = {
-                    src: linkEl.getAttribute('href'),
-                    w: parseInt(size[0], 10),
-                    h: parseInt(size[1], 10)
-                };
-
-                if(figureEl.children.length > 1) {
-                    item.title = figureEl.children[1].innerHTML; 
-                }
-
-                if(linkEl.children.length > 0) {
-                    item.msrc = linkEl.children[0].getAttribute('src');
-                } 
-
-                item.el = figureEl;
-                items.push(item);
-            }
-            return items;
-        };
-
-        var closest = function closest(el, fn) {
-            return el && ( fn(el) ? el : closest(el.parentNode, fn) );
-        };
-
-        var onThumbnailsClick = function(e) {
-            e = e || window.event;
-            e.preventDefault ? e.preventDefault() : e.returnValue = false;
-
-            var eTarget = e.target || e.srcElement;
-
-            var clickedListItem = closest(eTarget, function(el) {
-                return (el.tagName && el.tagName.toUpperCase() === 'FIGURE');
-            });
-
-            if(!clickedListItem) {
-                return;
-            }
-
-            var clickedGallery = clickedListItem.parentNode,
-                childNodes = clickedListItem.parentNode.childNodes,
-                numChildNodes = childNodes.length,
-                nodeIndex = 0,
-                index;
-
-            for (var i = 0; i < numChildNodes; i++) {
-                if(childNodes[i].nodeType !== 1) { 
-                    continue; 
-                }
-
-                if(childNodes[i] === clickedListItem) {
-                    index = nodeIndex;
-                    break;
-                }
-                nodeIndex++;
-            }
-					
-            if(index >= 0) {
-                openPhotoSwipe( index, clickedGallery );
-            }
-            return false;
-        };
-
-        var photoswipeParseHash = function() {
-            var hash = window.location.hash.substring(1),
-                params = {};
-
-            if(hash.length < 5) {
-                return params;
-            }
-
-            var vars = hash.split('&');
-            for (var i = 0; i < vars.length; i++) {
-                if(!vars[i]) {
-                    continue;
-                }
-                var pair = vars[i].split('=');  
-                if(pair.length < 2) {
-                    continue;
-                }           
-                params[pair[0]] = pair[1];
-            }
-
-            if(params.gid) {
-                params.gid = parseInt(params.gid, 10);
-            }
-
-            return params;
-        };
-
-        var openPhotoSwipe = function(index, galleryElement, disableAnimation, fromURL) {
-            var pswpElement = document.querySelectorAll('.pswp')[0],
-                gallery,
-                options,
-                items;
-
-            items = parseThumbnailElements(galleryElement);
-
-            options = {
-                // Buttons/elements
-                captionEl: false,
-                closeEl: true,
-                arrowEl: true,
-                fullscreenEl: false,
-                shareEl: false,
-                counterEl: false,
-                zoomEl: false,
-                maxSpreadZoom: 1,
-			    barsSize: { top: 40, bottom: 40, left: 40, right: 40 },
-                closeElClasses: [
-                    "item",
-                    "caption",
-                    "zoom-wrap",
-                    "ui",
-                    "top-bar",
-                    "img"
-                ],
-                // define gallery index (for URL)
-			    galleryUID: 0,
-                //galleryUID: galleryElement.getAttribute("data-pswp-uid"),
-                getDoubleTapZoom: function(isMouseClick, item) {
-                    return item.initialZoomLevel;
-                },
-                pinchToClose: false,
-                getThumbBoundsFn: function(index) {
-                    // See Options -> getThumbBoundsFn section of documentation for more info
-                    var thumbnail = items[index].el.getElementsByTagName("img")[0], // find thumbnail
-                        pageYScroll = window.pageYOffset || document.documentElement.scrollTop,
-                        rect = thumbnail.getBoundingClientRect();
-                    return { x: rect.left, y: rect.top + pageYScroll, w: rect.width };
-                }
-            };
-
-            // PhotoSwipe opened from URL
-            if(fromURL) {
-                if(options.galleryPIDs) {
-                    for(var j = 0; j < items.length; j++) {
-                        if(items[j].pid == index) {
-                            options.index = j;
-                            break;
-                        }
-                    }
-                } else {
-                    // in URL indexes start from 1
-                    options.index = parseInt(index, 10) - 1;
-                }
-            } else {
-                options.index = parseInt(index, 10);
-            }
-
-            if( isNaN(options.index) ) {
-                return;
-            }
-
-            if(disableAnimation) {
-                options.showAnimationDuration = 0;
-            }
-
-            gallery = new PhotoSwipe( pswpElement, PhotoSwipeUI_Default, items, options);
-            gallery.init();
-        };
-
-        var galleryElements = document.querySelectorAll( gallerySelector );
-            for(var i = 0, l = galleryElements.length; i < l; i++) {
-                galleryElements[i].setAttribute('data-pswp-uid', i+1);
-                galleryElements[i].onclick = onThumbnailsClick;
-            }
-
-        var hashData = photoswipeParseHash();
-        if(hashData.pid && hashData.gid) {
-            openPhotoSwipe( hashData.pid ,  galleryElements[ hashData.gid - 1 ], true, true );
-        }
-    };
-
-    // execute above function
-    initPhotoSwipeFromDOM('.photoswiper');
-	
     /*-----------------------------------------------------------------
       Contacts form
     -------------------------------------------------------------------*/
